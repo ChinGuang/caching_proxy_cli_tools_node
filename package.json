@@ -17,7 +17,7 @@
   ],
   "author": "Gan Chin Guang",
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/ChinGuang/caching_proxy_cli_tools_node/issues"
   },
