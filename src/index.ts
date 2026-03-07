@@ -43,9 +43,6 @@ try {
     server.use((req, res) => {
       const isHttps = target.protocol == 'https:'
       const httpProtocolUsed = isHttps ? https : http;
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false
-      });
       const clientReq = httpProtocolUsed.request({
         hostname: target.hostname,
         protocol: target.protocol,
@@ -55,7 +52,6 @@ try {
           ...req.headers,
           host: target.hostname,
         },
-        agent: isHttps ? httpsAgent : undefined,
       }, (clientRes) => {
         res.setHeader("X-Cache", "MISS")
         res.writeHead(clientRes.statusCode || 200, clientRes.headers);

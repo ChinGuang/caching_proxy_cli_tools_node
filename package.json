@@ -29,7 +29,7 @@
     "typescript": "^5.9.3"
   },
   "bin": {
-    "caching-proxy": "./dist/index.js"
+    "caching-proxy": "./bin/caching-proxy.sh"
   },
   "dependencies": {
     "express": "^5.2.1"
