@@ -1,6 +1,10 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --use-system-ca
 import assert from "node:assert";
 import { parseArgs, type ParseArgsOptionDescriptor as Options } from "node:util";
+import app from 'express';
+import http from 'node:http';
+import https from 'node:https';
+
 
 const options: Record<string, Options> = {
   "port": {
@@ -34,8 +38,32 @@ try {
   if (clearCache) {
     // clear cache
   } else {
-    // start the caching proxy server
-
+    const server = app();
+    const target = new URL(origin!);
+    server.use((req, res) => {
+      const isHttps = target.protocol == 'https:'
+      const httpProtocolUsed = isHttps ? https : http;
+      const httpsAgent = new https.Agent({
+        rejectUnauthorized: false
+      });
+      const clientReq = httpProtocolUsed.request({
+        hostname: target.hostname,
+        protocol: target.protocol,
+        path: req.originalUrl,
+        method: req.method,
+        headers: {
+          ...req.headers,
+          host: target.hostname,
+        },
+        agent: isHttps ? httpsAgent : undefined,
+      }, (clientRes) => {
+        res.setHeader("X-Cache", "MISS")
+        res.writeHead(clientRes.statusCode || 200, clientRes.headers);
+        clientRes.pipe(res);
+      });
+      req.pipe(clientReq);
+    });
+    server.listen(port);
   }
 } catch (error) {
   console.error("Invalid arguments:", error);
