@@ -18,4 +18,8 @@ export class RedisModule {
     await this.redis.HSET(key, field, value);
     await this.redis.HEXPIRE(key, field, 3);
   }
+
+  static async clear(): Promise<void> {
+    await this.redis.FLUSHALL();
+  }
 }

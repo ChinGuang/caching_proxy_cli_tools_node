@@ -24,6 +24,7 @@ const options: Record<string, Options> = {
 }
 
 const args: string[] = process.argv.slice(2);
+console.log("Arguments received:", args);
 try {
   const parsedArgs = parseArgs({
     options,
@@ -34,9 +35,11 @@ try {
   const clearCache = parsedArgs.values["clear-cache"] as boolean;
   assert.notStrictEqual(!!port, !origin, "Port and origin must both be specified or both be omitted");
   assert.notStrictEqual(clearCache, !!port || !!origin, "Clear cache flag cannot be used with port or origin");
+  await RedisModule.init();
 
   if (clearCache) {
-    // clear cache
+    await RedisModule.clear();
+    console.log("Cache cleared");
   } else {
     const server = app();
     const target = new URL(origin!);
@@ -91,8 +94,8 @@ try {
       }
 
     });
-    await RedisModule.init();
     server.listen(port);
+    console.log(`Server listening on port ${port}`);
   }
 } catch (error) {
   console.error("Invalid arguments:", error);
