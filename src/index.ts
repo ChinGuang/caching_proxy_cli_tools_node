@@ -40,7 +40,6 @@ try {
     await RedisModule.clear();
     console.log("Cache cleared");
   } else {
-    // const server = app();
     const target = new URL(origin!);
     const httpServer = http.createServer(async (req, res) => {
       const isHttps = target.protocol == 'https:'
