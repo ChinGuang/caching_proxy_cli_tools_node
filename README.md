@@ -1,6 +1,12 @@
 # caching_proxy_cli_tools_node
  a CLI tool that starts a caching proxy server, it will forward requests to the actual server and cache the responses. If the same request is made again, it will return the cached response instead of forwarding the request to the server.
 
+```
+pnpm install
+pnpm build
+npm link
+```
+
 Project URL: https://roadmap.sh/projects/caching-server
 
 ```caching-proxy --port <number> --origin <url>```
