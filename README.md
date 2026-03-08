@@ -3,13 +3,14 @@
 
 Project URL: https://roadmap.sh/projects/caching-server
 
-# Setup
+## Setup
 ```
 pnpm install
 pnpm build
 npm link
 ```
 
+## How to use
 ```caching-proxy --port <number> --origin <url>```
 
 - --port is the port on which the caching proxy server will run.<br>
