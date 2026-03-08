@@ -10,3 +10,5 @@ Project URL: https://roadmap.sh/projects/caching-server
 
 ```caching-proxy --clear-cache```
 - a way to clear the cache
+
+Development Time: about 5 hrs (exclude rest time, start at 7 March 2026, end at 8 March 2026)
