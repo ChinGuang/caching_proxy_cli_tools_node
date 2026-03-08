@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert";
 import { parseArgs, type ParseArgsOptionDescriptor as Options } from "node:util";
-import app, { type Request, type Response } from 'express';
 import http from 'node:http';
 import https from 'node:https';
 import { RedisModule } from "./redis.js";
@@ -41,13 +40,13 @@ try {
     await RedisModule.clear();
     console.log("Cache cleared");
   } else {
-    const server = app();
+    // const server = app();
     const target = new URL(origin!);
-    server.use(async (req, res) => {
+    const httpServer = http.createServer(async (req, res) => {
       const isHttps = target.protocol == 'https:'
       const httpProtocolUsed = isHttps ? https : http;
-      let cacheKey = `${req.method}:${req.originalUrl}`;
-      if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+      let cacheKey = `${req.method}:${req.url}`;
+      if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method ?? '')) {
         let bodyData = '';
         req.on('data', chunk => {
           bodyData += chunk;
@@ -72,6 +71,7 @@ try {
               clientReq.write(bodyData);
             },
             handleCache: async (body) => {
+              if (!req.method) return;
               await RedisModule.hset(req.method, cacheKey, body);
             },
           });
@@ -87,26 +87,28 @@ try {
           res,
           target,
           handleCache: async (body) => {
+            if (!req.method) return;
             await RedisModule.hset(req.method, cacheKey, body);
           },
           preSendRequest: (clientReq) => { },
         });
       }
-
     });
-    server.listen(port);
+    httpServer.listen(port);
     console.log(`Server listening on port ${port}`);
   }
 } catch (error) {
   console.error("Invalid arguments:", error);
 }
 
-async function handleCache(req: Request, res: Response, cacheKey: string): Promise<boolean> {
+async function handleCache(req: http.IncomingMessage, res: http.ServerResponse, cacheKey: string): Promise<boolean> {
+  if (!req.method) return false;
   const cachedResponseStr = await RedisModule.hget(req.method, cacheKey);
   if (cachedResponseStr) {
     const cachedResponse = JSON.parse(cachedResponseStr);
     res.setHeader("X-Cache", "HIT")
-    res.json(cachedResponse);
+    res.write(JSON.stringify(cachedResponse));
+    res.end();
     return true;
   }
   return false;
@@ -114,7 +116,7 @@ async function handleCache(req: Request, res: Response, cacheKey: string): Promi
 
 function sendProxiedRequestWithCache(payload: {
   httpProtocolUsed: typeof http | typeof https;
-  req: Request; res: Response; target: { hostname: string; protocol: string };
+  req: http.IncomingMessage; res: http.ServerResponse; target: { hostname: string; protocol: string };
   handleCache: (body: string) => Promise<void>;
   preSendRequest?: (req: http.ClientRequest) => void;
 }) {
@@ -122,7 +124,7 @@ function sendProxiedRequestWithCache(payload: {
   const clientReq = httpProtocolUsed.request({
     hostname: target.hostname,
     protocol: target.protocol,
-    path: req.originalUrl,
+    path: req.url,
     method: req.method,
     headers: {
       ...req.headers,
