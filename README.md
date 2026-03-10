@@ -10,6 +10,11 @@ pnpm build
 npm link
 ```
 
+## Docker Setup
+```
+pnpm docker-up
+```
+
 ## How to use
 ```caching-proxy --port <number> --origin <url>```
 
